@@ -2,7 +2,7 @@
 slug: code-review-skill
 name: code-review
 displayName: Code Review
-version: 1.1.0
+version: 1.2.0
 summary: 审查代码的安全漏洞、性能问题和风格问题
 description: "Use when the user wants to review code or check for security issues. Triggers on 'review this code', 'check security', 'audit code'."
 license: MIT
@@ -10,13 +10,13 @@ license: MIT
 
 # Code Review
 
-Reviews code for security vulnerabilities, performance issues, and style problems using both automated scanning and AI analysis.
+Reviews code using automated security scanning + AI analysis.
 
 ## When to use
 
 - Review code before merging a PR
 - Check for security vulnerabilities
-- Audit a codebase for quality issues
+- Audit codebase quality
 
 ## When NOT to use
 
@@ -24,79 +24,70 @@ Reviews code for security vulnerabilities, performance issues, and style problem
 - Debugging runtime errors
 - Setting up CI/CD
 
-## Workflow
+## Workflow (follow these exact steps)
 
-### Step 1: Identify input type
+### Step 1: Identify what to review
 
-Use `read` tool to examine the code:
+Ask the user OR detect from context:
+- If user pasted code → review the pasted code
+- If user gave a file path → use that file
+- If user gave a directory → scan all code files
+
+### Step 2: Read the code
+
+Use the `read` tool to load the file:
 
 ```
 read <file_path>
 ```
 
-If the user provides a directory, use `glob` to find all code files:
+If multiple files, use `glob` to find them:
 
 ```
 glob **/*.py
-glob **/*.js
 ```
 
-### Step 2: Run security scanner
+Then read each one with `read`.
 
-Always run the bundled scanner first for deterministic findings:
+### Step 3: Run security scanner
 
-```bash
-python <skill_dir>/scripts/security_scanner.py <file_or_directory>
+Execute the bundled scanner using `bash`:
+
+```
+bash: python <skill_dir>/scripts/security_scanner.py <file_or_directory>
 ```
 
-This produces a structured report with severity levels and line numbers. Save the output:
+This returns a Markdown report with findings sorted by severity.
 
-```bash
-python <skill_dir>/scripts/security_scanner.py <target> > /tmp/security-scan.md
+Save the scanner output to a temp file for reference:
+
+```
+write /tmp/security-scan.md <scanner_output>
 ```
 
-### Step 3: AI deep analysis
+### Step 4: AI analysis
 
-After the scanner runs, perform your own analysis:
+After scanner runs, analyze the code yourself:
 
-- Read each file with the `read` tool
-- Check for performance patterns (N+1 queries, unbounded loops)
-- Check for correctness (null access, resource leaks, race conditions)
-- Check style (long functions, deep nesting, magic numbers)
+1. Re-read the code with `read` tool
+2. Check for performance patterns the scanner missed
+3. Check for correctness issues (null access, resource leaks)
+4. Check style (long functions, deep nesting)
 
-### Step 4: Merge results
+### Step 5: Merge and deduplicate
 
-Combine scanner findings (deterministic) with your analysis (contextual). Deduplicate — if the scanner already found it, don't repeat it.
+Combine scanner findings with your analysis:
+- If scanner already found it, don't repeat it
+- Add your findings that the scanner couldn't detect
+- Prioritize by severity
 
-### Step 5: Generate report
+### Step 6: Save report
 
-Write the final report to a file:
-
-```bash
-# Save to project root
-write review-report.md <report_content>
+```
+write review-report.md <final_report>
 ```
 
-## Output format
-
-```markdown
-# Code Review Report
-
-**Verdict**: BLOCK | CHANGES REQUESTED | APPROVE WITH SUGGESTIONS | APPROVE
-**Scanner findings**: X (from security_scanner.py)
-**AI findings**: Y (from manual review)
-
-## Findings
-
-### [CRITICAL] file.py:42 - Hardcoded password
-**Source**: scanner
-**Fix**: Use environment variable
-**Code**: `password = "secret"` → `os.environ.get("PASSWORD")`
-
-### [HIGH] file.py:88 - N+1 query pattern
-**Source**: AI analysis
-**Fix**: Batch queries or use select_related
-```
+Tell the user: "Review saved to review-report.md"
 
 ## Severity rules
 
@@ -109,14 +100,6 @@ write review-report.md <report_content>
 
 ## Error handling
 
-- **No code provided**: Ask user to paste code or give file path
-- **File too large** (>1000 lines): Review security scanner output first, then sample key functions
-- **Unknown language**: Run scanner only (it works on any text), skip AI language-specific analysis
-- **Scanner fails**: Fall back to pure AI analysis with a note that scanner was unavailable
-
-## Known limitations
-
-- Scanner is regex-based, may miss context-dependent vulnerabilities
-- Cannot run code or test dynamically
-- Does not check dependency vulnerabilities (only source code patterns)
-- AI analysis quality depends on code readability
+- **Scanner fails**: Continue with AI-only analysis, note "scanner unavailable"
+- **File too large** (>1000 lines): Review scanner output first, then sample key functions
+- **Unknown language**: Scanner works on any text; skip language-specific AI analysis
