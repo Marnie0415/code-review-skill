@@ -19,6 +19,20 @@ Performs comprehensive code review covering security vulnerabilities, performanc
 - Audit a codebase for quality issues
 - Get feedback on code patterns
 
+## Bundled tools
+
+### Security Scanner (`scripts/security_scanner.py`)
+
+Regex-based security scanner that detects hardcoded secrets, SQL injection, XSS, command injection, and other vulnerabilities. Run it before manual review for deterministic findings:
+
+```bash
+python scripts/security_scanner.py <file_or_directory>
+```
+
+Output: structured report with severity levels (CRITICAL/HIGH/MEDIUM/LOW), file:line references, and code snippets.
+
+**Install dependencies**: None (stdlib only).
+
 ## When NOT to use
 
 - Writing new code or implementing features

@@ -19,7 +19,8 @@ Code review is time-consuming and easy to miss things. Security vulnerabilities,
 
 - Claude Code, Codex, or any LLM agent that supports SKILL.md
 - Git (to clone the repository)
-- No Python, Node.js, or other runtime required
+- Python 3.8+ (optional, for security scanner script)
+- No other dependencies required
 
 ## Installation
 
