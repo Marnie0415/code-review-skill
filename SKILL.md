@@ -2,148 +2,121 @@
 slug: code-review-skill
 name: code-review
 displayName: Code Review
-version: 1.0.0
+version: 1.1.0
 summary: 审查代码的安全漏洞、性能问题和风格问题
-description: "Use when the user wants to review code, check for security issues, audit a codebase, or get feedback on a pull request. Triggers on 'review this code', 'check for security issues', 'audit this codebase', 'review my PR', 'what's wrong with this code', or when the user pastes code for evaluation."
+description: "Use when the user wants to review code or check for security issues. Triggers on 'review this code', 'check security', 'audit code'."
 license: MIT
 ---
 
 # Code Review
 
-Performs comprehensive code review covering security vulnerabilities, performance issues, code style, and common bug patterns with actionable feedback.
+Reviews code for security vulnerabilities, performance issues, and style problems using both automated scanning and AI analysis.
 
 ## When to use
 
 - Review code before merging a PR
 - Check for security vulnerabilities
 - Audit a codebase for quality issues
-- Get feedback on code patterns
-
-## Bundled tools
-
-### Security Scanner (`scripts/security_scanner.py`)
-
-Regex-based security scanner that detects hardcoded secrets, SQL injection, XSS, command injection, and other vulnerabilities. Run it before manual review for deterministic findings:
-
-```bash
-python scripts/security_scanner.py <file_or_directory>
-```
-
-Output: structured report with severity levels (CRITICAL/HIGH/MEDIUM/LOW), file:line references, and code snippets.
-
-**Install dependencies**: None (stdlib only).
 
 ## When NOT to use
 
-- Writing new code or implementing features
-- Debugging specific runtime errors
-- Optimizing database queries
-- Setting up CI/CD pipelines
-- Creating code from scratch (this reviews existing code only)
+- Writing new code
+- Debugging runtime errors
+- Setting up CI/CD
 
 ## Workflow
 
-1. Identify the input: code snippet, diff, or file path.
-2. Run security checks first (highest priority).
-3. Check for performance issues.
-4. Check for correctness and error handling.
-5. Review style and maintainability.
-6. Generate findings with severity levels.
-7. Provide a verdict and actionable fix suggestions.
+### Step 1: Identify input type
 
-## Review categories
+Use `read` tool to examine the code:
 
-### 1. Security (Critical)
-- Hardcoded secrets, API keys, passwords
-- SQL injection, XSS, CSRF vulnerabilities
-- Insecure deserialization
-- Path traversal
-- Command injection
-- Insecure cryptography usage
-- Missing authentication/authorization checks
+```
+read <file_path>
+```
 
-### 2. Performance (High)
-- N+1 query patterns
-- Unbounded loops or recursion
-- Missing index hints for known queries
-- Large object allocation in hot paths
-- Blocking I/O in async contexts
-- Missing caching opportunities
+If the user provides a directory, use `glob` to find all code files:
 
-### 3. Correctness (High)
-- Null/undefined access without guards
-- Race conditions
-- Off-by-one errors
-- Incorrect error handling (swallowed exceptions)
-- Resource leaks (unclosed connections, files)
-- Type mismatches
+```
+glob **/*.py
+glob **/*.js
+```
 
-### 4. Style and Maintainability (Medium)
-- Functions exceeding 50 lines
-- Deep nesting (more than 3 levels)
-- Magic numbers without constants
-- Dead code
-- Missing error messages
-- Inconsistent naming conventions
+### Step 2: Run security scanner
+
+Always run the bundled scanner first for deterministic findings:
+
+```bash
+python <skill_dir>/scripts/security_scanner.py <file_or_directory>
+```
+
+This produces a structured report with severity levels and line numbers. Save the output:
+
+```bash
+python <skill_dir>/scripts/security_scanner.py <target> > /tmp/security-scan.md
+```
+
+### Step 3: AI deep analysis
+
+After the scanner runs, perform your own analysis:
+
+- Read each file with the `read` tool
+- Check for performance patterns (N+1 queries, unbounded loops)
+- Check for correctness (null access, resource leaks, race conditions)
+- Check style (long functions, deep nesting, magic numbers)
+
+### Step 4: Merge results
+
+Combine scanner findings (deterministic) with your analysis (contextual). Deduplicate — if the scanner already found it, don't repeat it.
+
+### Step 5: Generate report
+
+Write the final report to a file:
+
+```bash
+# Save to project root
+write review-report.md <report_content>
+```
 
 ## Output format
 
-For each finding:
+```markdown
+# Code Review Report
+
+**Verdict**: BLOCK | CHANGES REQUESTED | APPROVE WITH SUGGESTIONS | APPROVE
+**Scanner findings**: X (from security_scanner.py)
+**AI findings**: Y (from manual review)
+
+## Findings
+
+### [CRITICAL] file.py:42 - Hardcoded password
+**Source**: scanner
+**Fix**: Use environment variable
+**Code**: `password = "secret"` → `os.environ.get("PASSWORD")`
+
+### [HIGH] file.py:88 - N+1 query pattern
+**Source**: AI analysis
+**Fix**: Batch queries or use select_related
 ```
-[SEVERITY] FILE:LINE - ISSUE
-  Description: What is wrong
-  Fix: How to fix it
-  Example: Code snippet showing the fix (when helpful)
-```
 
-Severity levels: CRITICAL, HIGH, MEDIUM, LOW, INFO
+## Severity rules
 
-## Rules
-
-- Always check for secrets first. If found, flag as CRITICAL.
-- Group findings by file, then by severity.
-- Provide concrete fix suggestions, not just descriptions.
-- If code looks clean, say so. Do not invent issues.
-- Max 20 findings per review. Prioritize by severity.
-- For large codebases, focus on changed files first.
-
-## Handling different inputs
-
-- **Single file**: Full review
-- **Multiple files**: Review each, cross-reference for consistency
-- **Diff/patch**: Focus on changes, check for regression patterns
-- **Long code**: Prioritize security and correctness, mention style in summary
+| Level | Criteria |
+|-------|----------|
+| CRITICAL | Hardcoded secrets, SQL injection, command injection |
+| HIGH | XSS, resource leaks, race conditions |
+| MEDIUM | Missing validation, broad exceptions, debug mode |
+| LOW | Style issues, TODOs, magic numbers |
 
 ## Error handling
 
-- **No code provided**: Ask user to paste the code or provide a file path.
-- **Code too short** (under 5 lines): Note that meaningful review requires more context.
-- **Unknown language**: Review for general patterns (secrets, error handling) only.
-- **Obfuscated code**: Report inability to review and suggest readable version.
-- **Binary/non-text content**: Reject and ask for source code.
-
-## Examples
-
-### Example 1: Python function review
-Input: A Flask endpoint with SQL queries
-Output: Findings for hardcoded credentials (CRITICAL), missing input validation (HIGH), no rate limiting (MEDIUM), with fix suggestions.
-
-### Example 2: JavaScript codebase review
-Input: 3 files from a React application
-Output: Findings grouped by file, covering XSS risks, prop validation, state management issues.
-
-### Example 3: Diff review
-Input: A git diff adding a new API endpoint
-Output: Focused review on the changes — authentication check, input sanitization, error response format.
+- **No code provided**: Ask user to paste code or give file path
+- **File too large** (>1000 lines): Review security scanner output first, then sample key functions
+- **Unknown language**: Run scanner only (it works on any text), skip AI language-specific analysis
+- **Scanner fails**: Fall back to pure AI analysis with a note that scanner was unavailable
 
 ## Known limitations
 
-- Cannot run the code or test it dynamically
-- Pattern-based detection may miss context-dependent vulnerabilities
-- Cannot assess runtime behavior or actual performance
-- Does not check dependency vulnerabilities (only code patterns)
-- Review quality depends on code readability
-
-## Output format
-
-Grouped by severity, then by file. Each finding includes description, fix suggestion, and example when helpful. Final verdict: BLOCK, CHANGES REQUESTED, APPROVE WITH SUGGESTIONS, or APPROVE.
+- Scanner is regex-based, may miss context-dependent vulnerabilities
+- Cannot run code or test dynamically
+- Does not check dependency vulnerabilities (only source code patterns)
+- AI analysis quality depends on code readability
