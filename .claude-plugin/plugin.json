@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "code-review",
+  "description": "Review code for security vulnerabilities, performance issues, and style problems with automated scanning and AI analysis.",
+  "author": {
+    "name": "Marnie0415",
+    "url": "https://github.com/Marnie0415"
+  },
+  "homepage": "https://github.com/Marnie0415/code-review-skill",
+  "repository": "https://github.com/Marnie0415/code-review-skill",
+  "license": "MIT",
+  "keywords": ["code-review", "security", "static-analysis", "agent-skill", "audit"],
+  "skills": ".",
+  "version": "1.1.0"
+}
