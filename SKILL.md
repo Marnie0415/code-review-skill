@@ -2,7 +2,7 @@
 slug: code-review-skill
 name: code-review
 displayName: Code Review
-version: 1.2.0
+version: 1.3.0
 summary: 审查代码的安全漏洞、性能问题和风格问题
 description: "Use when the user wants to review code or check for security issues. Triggers on 'review this code', 'check security', 'audit code'."
 license: MIT
@@ -10,7 +10,7 @@ license: MIT
 
 # Code Review
 
-Reviews code using automated security scanning + AI analysis.
+Reviews code using automated security scanning + AI analysis with smart adaptation.
 
 ## When to use
 
@@ -24,70 +24,71 @@ Reviews code using automated security scanning + AI analysis.
 - Debugging runtime errors
 - Setting up CI/CD
 
-## Workflow (follow these exact steps)
+## Workflow
 
-### Step 1: Identify what to review
+### Step 1: Detect context
 
-Ask the user OR detect from context:
-- If user pasted code → review the pasted code
-- If user gave a file path → use that file
-- If user gave a directory → scan all code files
+Identify what to review AND adapt strategy:
 
-### Step 2: Read the code
+```
+# Detect language from file extension
+.py → Python rules (SQL injection, pickle, subprocess)
+.js/.ts → JavaScript rules (XSS, eval, prototype pollution)
+.java → Java rules (deserialization, XXE, SSRF)
+.go → Go rules (unsafe pointer, command injection)
+```
 
-Use the `read` tool to load the file:
+Ask the user:
+- "Should I focus on security, performance, or style?"
+- "Any specific concerns?"
+
+### Step 2: Read and scan
 
 ```
 read <file_path>
+bash: python <skill_dir>/scripts/security_scanner.py <target>
 ```
 
-If multiple files, use `glob` to find them:
+For large projects (>50 files), use `grep` to find high-risk patterns first:
 
 ```
-glob **/*.py
+grep -r "password\|secret\|token" --include="*.py" .
+grep -r "execute\|query" --include="*.py" .
 ```
 
-Then read each one with `read`.
+### Step 3: AI deep analysis
 
-### Step 3: Run security scanner
+Adapt analysis based on language:
 
-Execute the bundled scanner using `bash`:
+| Language | Focus areas |
+|----------|-------------|
+| Python | pickle, subprocess, SQL injection, type hints |
+| JavaScript | XSS, prototype pollution, eval, async patterns |
+| Java | deserialization, XXE, thread safety |
+| Go | unsafe, race conditions, error handling |
 
-```
-bash: python <skill_dir>/scripts/security_scanner.py <file_or_directory>
-```
+### Step 4: Multi-turn interaction
 
-This returns a Markdown report with findings sorted by severity.
+After initial report, support follow-ups:
 
-Save the scanner output to a temp file for reference:
+- User asks "Explain finding #3" → expand that finding
+- User asks "Only show CRITICAL" → filter by severity
+- User asks "Fix this" → provide specific code fix
+- User asks "What about line 42?" → analyze that specific line
 
-```
-write /tmp/security-scan.md <scanner_output>
-```
-
-### Step 4: AI analysis
-
-After scanner runs, analyze the code yourself:
-
-1. Re-read the code with `read` tool
-2. Check for performance patterns the scanner missed
-3. Check for correctness issues (null access, resource leaks)
-4. Check style (long functions, deep nesting)
-
-### Step 5: Merge and deduplicate
-
-Combine scanner findings with your analysis:
-- If scanner already found it, don't repeat it
-- Add your findings that the scanner couldn't detect
-- Prioritize by severity
-
-### Step 6: Save report
+### Step 5: Save and cache
 
 ```
-write review-report.md <final_report>
+write review-report.md <report>
 ```
 
-Tell the user: "Review saved to review-report.md"
+If reviewing the same project later, reference the previous report:
+
+```
+read review-report.md
+```
+
+Skip findings already reported unless code changed.
 
 ## Severity rules
 
@@ -100,6 +101,6 @@ Tell the user: "Review saved to review-report.md"
 
 ## Error handling
 
-- **Scanner fails**: Continue with AI-only analysis, note "scanner unavailable"
-- **File too large** (>1000 lines): Review scanner output first, then sample key functions
-- **Unknown language**: Scanner works on any text; skip language-specific AI analysis
+- **Scanner fails**: Continue with AI-only analysis
+- **File too large**: Sample key functions, scan rest with grep
+- **Unknown language**: Scanner works on any text; use generic rules
