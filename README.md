@@ -15,16 +15,55 @@ Analyzes code for security flaws, performance bottlenecks, correctness issues, a
 
 Code review is time-consuming and easy to miss things. Security vulnerabilities, SQL injections, and hardcoded secrets often slip through. This skill catches them all — with severity ratings and fix suggestions you can copy-paste.
 
-## Quick start
+## Prerequisites
 
-```text
-# In Claude Code or Codex
-Use the code-review skill
-```
+- Claude Code, Codex, or any LLM agent that supports SKILL.md
+- Git (to clone the repository)
+- No Python, Node.js, or other runtime required
+
+## Installation
+
+### Step 1: Clone the repository
 
 ```bash
-cp -r code-review ~/.claude/skills/
+git clone https://github.com/Marnie0415/code-review-skill.git
 ```
+
+### Step 2: Copy to your skills directory
+
+**macOS / Linux:**
+
+```bash
+# For Claude Code
+cp -r code-review-skill ~/.claude/skills/
+
+# For Codex
+cp -r code-review-skill ~/.codex/skills/
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# For Claude Code
+Copy-Item -Path "code-review-skill" -Destination "$env:USERPROFILE\.claude\skills\code-review-skill" -Recurse
+
+# For Codex
+Copy-Item -Path "code-review-skill" -Destination "$env:USERPROFILE\.codex\skills\code-review-skill" -Recurse
+```
+
+### Step 3: Restart your agent
+
+Restart Claude Code or Codex to pick up the new skill.
+
+## Usage
+
+In Claude Code or Codex, simply ask:
+
+```text
+Review this code for issues
+```
+
+The agent will automatically detect and use this skill.
 
 ## What you get
 

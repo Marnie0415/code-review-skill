@@ -1,7 +1,11 @@
 ---
+slug: code-review-skill
 name: code-review
-version: "1.0.0"
+displayName: Code Review
+version: 1.0.0
+summary: 审查代码的安全漏洞、性能问题和风格问题
 description: "Use when the user wants to review code, check for security issues, audit a codebase, or get feedback on a pull request. Triggers on 'review this code', 'check for security issues', 'audit this codebase', 'review my PR', 'what's wrong with this code', or when the user pastes code for evaluation."
+license: MIT
 ---
 
 # Code Review
