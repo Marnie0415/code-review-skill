@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-D97757)](SKILL.md)
 [![Codex](https://img.shields.io/badge/Codex-Skill-000000)](SKILL.md)
-[![Version](https://img.shields.io/badge/Version-1.0.0-blue)]()
+[![Version](https://img.shields.io/badge/Version-1.1.0-blue)]()
 
 > Review code for security vulnerabilities, performance issues, and style problems.
 
