@@ -1,0 +1,14 @@
+{
+  "scanner": {
+    "whitelist": true,
+    "extensions": [".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rb", ".php", ".rs"],
+    "skip_dirs": [".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build"],
+    "max_line_length": 120
+  },
+  "review": {
+    "max_findings": 20,
+    "severity_threshold": "LOW",
+    "include_style": true,
+    "include_performance": true
+  }
+}
